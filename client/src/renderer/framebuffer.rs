@@ -40,7 +40,7 @@ impl Framebuffer {
             background_color,
             linear_filter,
             TextureFormat::COLOR_RGBA_STRAIGHT,
-            false,
+            true,
         )
     }
 
@@ -336,6 +336,20 @@ impl Framebuffer {
             ColorBuffer::Texture(texture) => texture,
             ColorBuffer::Renderbuffer(_) => panic!("not texture"),
         }
+    }
+
+    pub fn bind_to_cubemap(&mut self, renderer: &Renderer, mut texture: Texture, face: usize) -> Texture {
+        let binding = &self.bind(renderer);
+        let gl = &renderer.gl;
+        gl.framebuffer_texture_2d(
+            Gl::FRAMEBUFFER,
+            Gl::COLOR_ATTACHMENT0,
+            Gl::TEXTURE_CUBE_MAP_POSITIVE_X + face as u32,
+            Some(texture.inner()),
+            0,
+        );
+        drop(binding);
+        texture
     }
 
     /// Gets the depth texture that the [`Framebuffer`] renders to.

@@ -19,6 +19,7 @@ mod model;
 #[cfg(feature = "renderer3d_shadow")]
 mod shadow;
 mod shadow_volume;
+mod dynamic_texture;
 mod skybox;
 #[cfg(feature = "renderer3d_model")]
 mod svg;
@@ -38,3 +39,4 @@ pub use shadow_volume::*;
 pub use skybox::*;
 pub use text::*;
 pub use wire::*;
+pub use dynamic_texture::*;

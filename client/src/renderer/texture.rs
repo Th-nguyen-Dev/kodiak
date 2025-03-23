@@ -440,6 +440,31 @@ impl Texture {
         texture
     }
 
+    pub fn new_cubemap( renderer: &Renderer, size: u32, format: TextureFormat, linear_filter: bool) -> Self {
+        let gl = &renderer.gl;
+        let typ = TextureType::Cube;
+
+        let texture = Self::new(gl, UVec2::new(size, size), format, typ);
+        let target = typ.target();
+        let binding = texture.bind(renderer, 0);
+
+        // Can't be repeating because size isn't known yet.
+        gl.tex_parameteri(target, Gl::TEXTURE_WRAP_S, Gl::CLAMP_TO_EDGE as i32);
+        gl.tex_parameteri(target, Gl::TEXTURE_WRAP_T, Gl::CLAMP_TO_EDGE as i32);
+
+        let filter = if linear_filter {
+            Gl::LINEAR
+        } else {
+            Gl::NEAREST
+        } as i32;
+
+        gl.tex_parameteri(target, Gl::TEXTURE_MIN_FILTER, filter);
+        gl.tex_parameteri(target, Gl::TEXTURE_MAG_FILTER, filter);
+
+        drop(binding);
+        texture
+    }
+
     /// Copies the `bytes` to the [`Texture`], resizing to `dimensions` if necessary. The
     /// [`Texture`] must have been created with [`Texture::new_empty`].
     pub fn realloc_with_opt_bytes(
