@@ -235,23 +235,27 @@ impl Framebuffer {
             TextureFormat::COLOR_RGBA_STRAIGHT,
             true,
         ));
+        
         let gl = &renderer.gl;
         let framebuffer = gl.create_framebuffer().unwrap();
-
+        
+        // Create a depth renderbuffer
+        let depth_stencil = Some(DepthStencilBuffer::Renderbuffer(gl.create_renderbuffer().unwrap()));
+    
         let mut ret = Self {
             background_color,
             color,
             dimensions: dimension,
             framebuffer: Rc::new(framebuffer),
-            depth_stencil: None,
+            depth_stencil,
             #[cfg(feature = "renderer_srgb")]
             srgb: false,
         };
-
+    
         ret.set_viewport(renderer, dimension);
-
+    
         let binding = FramebufferBinding::new(renderer, &ret);
-
+    
         match &ret.color {
             ColorBuffer::Texture(texture) => {
                 gl.framebuffer_texture_2d(
@@ -262,10 +266,35 @@ impl Framebuffer {
                     0,
                 );
             }
-            ColorBuffer::Renderbuffer(renderbuffer) => {
+            ColorBuffer::Renderbuffer(_) => {
                 panic!("Renderbuffer not supported for cubemap");
-        }}
-
+            }
+        }
+    
+        // Initialize and attach the depth buffer
+        if let Some(DepthStencilBuffer::Renderbuffer(renderbuffer)) = &ret.depth_stencil {
+            // Bind and configure renderbuffer
+            gl.bind_renderbuffer(Gl::RENDERBUFFER, Some(renderbuffer));
+            
+            let d = dimension.as_ivec2();
+            
+            #[cfg(feature = "renderer_webgl2")]
+            let format = Gl::DEPTH24_STENCIL8;
+            #[cfg(not(feature = "renderer_webgl2"))]
+            let format = Gl::DEPTH_STENCIL;
+            
+            gl.renderbuffer_storage(Gl::RENDERBUFFER, format, d.x, d.y);
+            gl.bind_renderbuffer(Gl::RENDERBUFFER, None);
+            
+            // Attach to framebuffer
+            gl.framebuffer_renderbuffer(
+                Gl::FRAMEBUFFER,
+                Gl::DEPTH_STENCIL_ATTACHMENT,
+                Gl::RENDERBUFFER,
+                Some(renderbuffer),
+            );
+        }
+    
         debug_assert_eq!(
             match gl.check_framebuffer_status(Gl::FRAMEBUFFER) {
                 Gl::FRAMEBUFFER_INCOMPLETE_ATTACHMENT => Some("incomplete attachment"),
@@ -281,7 +310,7 @@ impl Framebuffer {
             },
             None
         );
-
+    
         drop(binding);
         ret
     }
