@@ -89,6 +89,7 @@ impl Framebuffer {
         )
     }
 
+
     /// Creates a new [`Framebuffer`] that's antialiased but isn't a texture.
     #[cfg(feature = "renderer_webgl2")]
     #[cfg_attr(not(feature = "renderer_srgb"), allow(unused))]
@@ -222,6 +223,82 @@ impl Framebuffer {
         ret
     }
 
+    //Create a new framebuffer that binds to a cubemap
+    pub fn new_with_cubemap(
+        renderer: &Renderer,
+        dimension: UVec2,
+        background_color: [u8; 4]
+    ) -> Self {
+        let color = ColorBuffer::Texture(Texture::new_cubemap(
+            renderer,
+            dimension.x,
+            TextureFormat::COLOR_RGBA_STRAIGHT,
+            true,
+        ));
+        let gl = &renderer.gl;
+        let framebuffer = gl.create_framebuffer().unwrap();
+
+        let mut ret = Self {
+            background_color,
+            color,
+            dimensions: dimension,
+            framebuffer: Rc::new(framebuffer),
+            depth_stencil: None,
+            #[cfg(feature = "renderer_srgb")]
+            srgb: false,
+        };
+
+        ret.set_viewport(renderer, dimension);
+
+        let binding = FramebufferBinding::new(renderer, &ret);
+
+        match &ret.color {
+            ColorBuffer::Texture(texture) => {
+                gl.framebuffer_texture_2d(
+                    Gl::FRAMEBUFFER,
+                    Gl::COLOR_ATTACHMENT0,
+                    Gl::TEXTURE_CUBE_MAP_POSITIVE_X,
+                    Some(texture.inner()),
+                    0,
+                );
+            }
+            ColorBuffer::Renderbuffer(renderbuffer) => {
+                panic!("Renderbuffer not supported for cubemap");
+        }}
+
+        debug_assert_eq!(
+            match gl.check_framebuffer_status(Gl::FRAMEBUFFER) {
+                Gl::FRAMEBUFFER_INCOMPLETE_ATTACHMENT => Some("incomplete attachment"),
+                Gl::FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT =>
+                    Some("incomplete missing attachment"),
+                Gl::FRAMEBUFFER_INCOMPLETE_DIMENSIONS => Some("incomplete dimensions"),
+                Gl::FRAMEBUFFER_UNSUPPORTED => Some("unsupported"),
+                #[cfg(feature = "renderer_webgl2")]
+                Gl::FRAMEBUFFER_INCOMPLETE_MULTISAMPLE => Some("incomplete multisample"),
+                #[cfg(feature = "renderer_webgl2")]
+                Gl::RENDERBUFFER_SAMPLES => Some("samples"),
+                _ => None,
+            },
+            None
+        );
+
+        drop(binding);
+        ret
+    }
+
+    pub fn bind_to_cubemap_face<'a>(&'a mut self, renderer: &'a Renderer, face: u32)  -> FramebufferBinding<'a>  {
+        let binding = FramebufferBinding::new(renderer, self);
+        let gl = &renderer.gl;
+        gl.framebuffer_texture_2d(
+            Gl::FRAMEBUFFER,
+            Gl::COLOR_ATTACHMENT0,
+            Gl::TEXTURE_CUBE_MAP_POSITIVE_X + face,
+            Some(self.as_texture().inner()),
+            0,
+        );
+        binding
+    }
+
     /// Sets the dimensions of the [`Framebuffer`]. If you want to render a whole screen,
     /// `viewport` should be [`Renderer::canvas_size`].
     ///
@@ -336,20 +413,6 @@ impl Framebuffer {
             ColorBuffer::Texture(texture) => texture,
             ColorBuffer::Renderbuffer(_) => panic!("not texture"),
         }
-    }
-
-    pub fn bind_to_cubemap(&mut self, renderer: &Renderer, mut texture: Texture, face: usize) -> Texture {
-        let binding = &self.bind(renderer);
-        let gl = &renderer.gl;
-        gl.framebuffer_texture_2d(
-            Gl::FRAMEBUFFER,
-            Gl::COLOR_ATTACHMENT0,
-            Gl::TEXTURE_CUBE_MAP_POSITIVE_X + face as u32,
-            Some(texture.inner()),
-            0,
-        );
-        drop(binding);
-        texture
     }
 
     /// Gets the depth texture that the [`Framebuffer`] renders to.

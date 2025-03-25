@@ -440,27 +440,56 @@ impl Texture {
         texture
     }
 
-    pub fn new_cubemap( renderer: &Renderer, size: u32, format: TextureFormat, linear_filter: bool) -> Self {
+    pub fn new_cubemap(renderer: &Renderer, size: u32, format: TextureFormat, linear_filter: bool) -> Self {
         let gl = &renderer.gl;
         let typ = TextureType::Cube;
-
+    
         let texture = Self::new(gl, UVec2::new(size, size), format, typ);
         let target = typ.target();
         let binding = texture.bind(renderer, 0);
-
+    
         // Can't be repeating because size isn't known yet.
         gl.tex_parameteri(target, Gl::TEXTURE_WRAP_S, Gl::CLAMP_TO_EDGE as i32);
         gl.tex_parameteri(target, Gl::TEXTURE_WRAP_T, Gl::CLAMP_TO_EDGE as i32);
-
+        gl.tex_parameteri(target, Gl::TEXTURE_WRAP_R, Gl::CLAMP_TO_EDGE as i32); // Add R coordinate wrapping
+    
         let filter = if linear_filter {
             Gl::LINEAR
         } else {
             Gl::NEAREST
         } as i32;
-
+    
         gl.tex_parameteri(target, Gl::TEXTURE_MIN_FILTER, filter);
         gl.tex_parameteri(target, Gl::TEXTURE_MAG_FILTER, filter);
-
+        
+        // Initialize all six faces with empty data
+        let level = 0;
+        let border = 0;
+        let internal_format = format.internal_format();
+        let src_format = format.src_format();
+        let src_type = format.src_type();
+        
+        // Create placeholder data - all zeros
+        let bytes_per_pixel = format.pixel_size() as usize;
+        let placeholder_data = vec![0u8; (size * size) as usize * bytes_per_pixel];
+        
+        // Initialize each face of the cubemap
+        for face_idx in 0..6 {
+            let target_face = Gl::TEXTURE_CUBE_MAP_POSITIVE_X + face_idx;
+            gl.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_opt_u8_array(
+                target_face,
+                level,
+                internal_format,
+                size as i32,
+                size as i32,
+                border,
+                src_format,
+                src_type,
+                Some(&placeholder_data),
+            )
+            .unwrap();
+        }
+    
         drop(binding);
         texture
     }
