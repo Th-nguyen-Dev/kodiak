@@ -25,7 +25,7 @@ impl<L> DynamicTextureLayer<L> {
         let mut framebuffer = Framebuffer::new_with_cubemap(
             renderer,
             UVec2 { x: resolution , y: resolution }, 
-            [1,1,1,1]
+            [255,255,255,1]
         );
         let viewport = UVec2::new(resolution, resolution);
         framebuffer.set_viewport(renderer, viewport);
@@ -38,17 +38,14 @@ impl<L> DynamicTextureLayer<L> {
     }
 }
 
+
 impl<L, P> RenderLayer<P> for DynamicTextureLayer<L>
 where
     L: RenderLayer<P>
 {
     fn render(&mut self, renderer: &Renderer, params: P) {
-        let binding = self.framebuffer.bind(renderer);
-        binding.clear();
         self.inner.render(renderer, params);
-        drop(binding);
     }
-
 
 }
 
@@ -63,21 +60,10 @@ impl<L> DynamicTextureLayer<L> {
         drop(binding);
     }
 
-    pub fn to_2Dtexture<P>(&mut self, renderer: &Renderer, params: P) -> Texture 
+    pub fn as_cube_texture<P>(&self) -> &Texture 
     where 
         L: RenderLayer<P>
     {
-        self.render(renderer, params);
-        self.framebuffer.as_texture().clone()
-
-    }
-
-    pub fn to_cube_texture<P>(&mut self, renderer: &Renderer, params: P, face: usize) -> Texture 
-    where 
-        L: RenderLayer<P>
-    {
-        let faceU32 = face as u32;
-        self.render_to_face(renderer, params, faceU32);
-        self.framebuffer.as_texture().clone()
+        self.framebuffer.as_texture()
     }
 }
