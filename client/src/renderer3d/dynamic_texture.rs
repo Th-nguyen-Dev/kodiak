@@ -1,15 +1,13 @@
-use crate::renderer:: {
-    Framebuffer, Layer, RenderLayer, Renderer, Texture
-};
-use glam::{Vec3, UVec2};
+use crate::renderer::{Framebuffer, Layer, RenderLayer, Renderer, Texture};
+use glam::{UVec2, Vec3};
 
 pub const CUBEMAP_DIRECTIONS: [(Vec3, Vec3); 6] = [
-    (Vec3::X, Vec3::NEG_Y),      // Right face - Y is flipped
-    (Vec3::NEG_X, Vec3::NEG_Y),  // Left face - Y is flipped
-    (Vec3::Y, Vec3::Z),          // Top face - this is correct
-    (Vec3::NEG_Y, Vec3::NEG_Z),  // Bottom face - this is correct
-    (Vec3::Z, Vec3::NEG_Y),      // Front face - Y is flipped
-    (Vec3::NEG_Z, Vec3::NEG_Y)   // Back face - Y is flipped
+    (Vec3::X, Vec3::NEG_Y),     // Right face - Y is flipped
+    (Vec3::NEG_X, Vec3::NEG_Y), // Left face - Y is flipped
+    (Vec3::Y, Vec3::Z),         // Top face - this is correct
+    (Vec3::NEG_Y, Vec3::NEG_Z), // Bottom face - this is correct
+    (Vec3::Z, Vec3::NEG_Y),     // Front face - Y is flipped
+    (Vec3::NEG_Z, Vec3::NEG_Y), // Back face - Y is flipped
 ];
 
 #[derive(Layer)]
@@ -24,8 +22,11 @@ impl<L> DynamicTextureLayer<L> {
     pub fn new(renderer: &Renderer, inner: L, resolution: u32) -> Self {
         let mut framebuffer = Framebuffer::new_with_cubemap(
             renderer,
-            UVec2 { x: resolution , y: resolution }, 
-            [255,255,255,1]
+            UVec2 {
+                x: resolution,
+                y: resolution,
+            },
+            [255, 255, 255, 1],
         );
         let viewport = UVec2::new(resolution, resolution);
         framebuffer.set_viewport(renderer, viewport);
@@ -38,21 +39,19 @@ impl<L> DynamicTextureLayer<L> {
     }
 }
 
-
 impl<L, P> RenderLayer<P> for DynamicTextureLayer<L>
 where
-    L: RenderLayer<P>
+    L: RenderLayer<P>,
 {
     fn render(&mut self, renderer: &Renderer, params: P) {
         self.inner.render(renderer, params);
     }
-
 }
 
 impl<L> DynamicTextureLayer<L> {
-    pub fn render_to_face<P>(&mut self, renderer: &Renderer, params: P, face: u32) 
-    where 
-        L: RenderLayer<P>
+    pub fn render_to_face<P>(&mut self, renderer: &Renderer, params: P, face: u32)
+    where
+        L: RenderLayer<P>,
     {
         let binding = self.framebuffer.bind_to_cubemap_face(renderer, face);
         binding.clear();
@@ -60,9 +59,9 @@ impl<L> DynamicTextureLayer<L> {
         drop(binding);
     }
 
-    pub fn as_cube_texture<P>(&self) -> &Texture 
-    where 
-        L: RenderLayer<P>
+    pub fn as_cube_texture<P>(&self) -> &Texture
+    where
+        L: RenderLayer<P>,
     {
         self.framebuffer.as_texture()
     }

@@ -117,7 +117,12 @@ impl Camera3d {
         Self::with_view(view_matrix, projection)
     }
 
-    pub fn looking_at_with_up(pos: Vec3, target: Vec3, up: Vec3, projection: impl Projection) -> Self {
+    pub fn looking_at_with_up(
+        pos: Vec3,
+        target: Vec3,
+        up: Vec3,
+        projection: impl Projection,
+    ) -> Self {
         let view_matrix = Mat4::look_at_rh(pos, target, up);
         Self::with_view(view_matrix, projection)
     }

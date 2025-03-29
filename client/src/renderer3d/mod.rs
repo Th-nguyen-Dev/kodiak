@@ -13,13 +13,13 @@ extern crate core;
 mod aabb;
 mod camera_3d;
 mod crosshair;
+mod dynamic_texture;
 mod free_camera;
 #[cfg(feature = "renderer3d_model")]
 mod model;
 #[cfg(feature = "renderer3d_shadow")]
 mod shadow;
 mod shadow_volume;
-mod dynamic_texture;
 mod skybox;
 #[cfg(feature = "renderer3d_model")]
 mod svg;
@@ -30,6 +30,7 @@ mod wire;
 pub use aabb::*;
 pub use camera_3d::*;
 pub use crosshair::*;
+pub use dynamic_texture::*;
 pub use free_camera::*;
 #[cfg(feature = "renderer3d_model")]
 pub use model::*;
@@ -39,4 +40,3 @@ pub use shadow_volume::*;
 pub use skybox::*;
 pub use text::*;
 pub use wire::*;
-pub use dynamic_texture::*;

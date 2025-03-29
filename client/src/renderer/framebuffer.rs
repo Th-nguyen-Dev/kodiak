@@ -89,7 +89,6 @@ impl Framebuffer {
         )
     }
 
-
     /// Creates a new [`Framebuffer`] that's antialiased but isn't a texture.
     #[cfg(feature = "renderer_webgl2")]
     #[cfg_attr(not(feature = "renderer_srgb"), allow(unused))]
@@ -227,7 +226,7 @@ impl Framebuffer {
     pub fn new_with_cubemap(
         renderer: &Renderer,
         dimension: UVec2,
-        background_color: [u8; 4]
+        background_color: [u8; 4],
     ) -> Self {
         let color = ColorBuffer::Texture(Texture::new_cubemap(
             renderer,
@@ -235,13 +234,15 @@ impl Framebuffer {
             TextureFormat::COLOR_RGBA_STRAIGHT,
             true,
         ));
-        
+
         let gl = &renderer.gl;
         let framebuffer = gl.create_framebuffer().unwrap();
-        
+
         // Create a depth renderbuffer
-        let depth_stencil = Some(DepthStencilBuffer::Renderbuffer(gl.create_renderbuffer().unwrap()));
-    
+        let depth_stencil = Some(DepthStencilBuffer::Renderbuffer(
+            gl.create_renderbuffer().unwrap(),
+        ));
+
         let mut ret = Self {
             background_color,
             color,
@@ -251,11 +252,11 @@ impl Framebuffer {
             #[cfg(feature = "renderer_srgb")]
             srgb: false,
         };
-    
+
         ret.set_viewport(renderer, dimension);
-    
+
         let binding = FramebufferBinding::new(renderer, &ret);
-    
+
         match &ret.color {
             ColorBuffer::Texture(texture) => {
                 gl.framebuffer_texture_2d(
@@ -270,22 +271,22 @@ impl Framebuffer {
                 panic!("Renderbuffer not supported for cubemap");
             }
         }
-    
+
         // Initialize and attach the depth buffer
         if let Some(DepthStencilBuffer::Renderbuffer(renderbuffer)) = &ret.depth_stencil {
             // Bind and configure renderbuffer
             gl.bind_renderbuffer(Gl::RENDERBUFFER, Some(renderbuffer));
-            
+
             let d = dimension.as_ivec2();
-            
+
             #[cfg(feature = "renderer_webgl2")]
             let format = Gl::DEPTH24_STENCIL8;
             #[cfg(not(feature = "renderer_webgl2"))]
             let format = Gl::DEPTH_STENCIL;
-            
+
             gl.renderbuffer_storage(Gl::RENDERBUFFER, format, d.x, d.y);
             gl.bind_renderbuffer(Gl::RENDERBUFFER, None);
-            
+
             // Attach to framebuffer
             gl.framebuffer_renderbuffer(
                 Gl::FRAMEBUFFER,
@@ -294,7 +295,7 @@ impl Framebuffer {
                 Some(renderbuffer),
             );
         }
-    
+
         debug_assert_eq!(
             match gl.check_framebuffer_status(Gl::FRAMEBUFFER) {
                 Gl::FRAMEBUFFER_INCOMPLETE_ATTACHMENT => Some("incomplete attachment"),
@@ -310,12 +311,16 @@ impl Framebuffer {
             },
             None
         );
-    
+
         drop(binding);
         ret
     }
 
-    pub fn bind_to_cubemap_face<'a>(&'a mut self, renderer: &'a Renderer, face: u32)  -> FramebufferBinding<'a>  {
+    pub fn bind_to_cubemap_face<'a>(
+        &'a mut self,
+        renderer: &'a Renderer,
+        face: u32,
+    ) -> FramebufferBinding<'a> {
         let binding = FramebufferBinding::new(renderer, self);
         let gl = &renderer.gl;
         gl.framebuffer_texture_2d(
