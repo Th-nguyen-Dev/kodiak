@@ -222,7 +222,7 @@ impl Framebuffer {
         ret
     }
 
-    //Create a new framebuffer that binds to a cubemap
+    /// Create a new framebuffer that binds to a cubemap
     pub fn new_with_cubemap(
         renderer: &Renderer,
         dimension: UVec2,
@@ -316,6 +316,7 @@ impl Framebuffer {
         ret
     }
 
+    /// Binds the framebuffer to a specific face of the cubemap.
     pub fn bind_to_cubemap_face<'a>(
         &'a mut self,
         renderer: &'a Renderer,

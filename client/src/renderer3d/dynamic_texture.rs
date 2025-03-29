@@ -1,6 +1,7 @@
 use crate::renderer::{Framebuffer, Layer, RenderLayer, Renderer, Texture};
 use glam::{UVec2, Vec3};
 
+/// Defines the directions for each face of a cubemap.
 pub const CUBEMAP_DIRECTIONS: [(Vec3, Vec3); 6] = [
     (Vec3::X, Vec3::NEG_Y),     // Right face - Y is flipped
     (Vec3::NEG_X, Vec3::NEG_Y), // Left face - Y is flipped
@@ -11,14 +12,29 @@ pub const CUBEMAP_DIRECTIONS: [(Vec3, Vec3); 6] = [
 ];
 
 #[derive(Layer)]
+/// A layer that renders content to a dynamic texture.
+/// 
+/// This wrapper allows rendering the inner layer to a texture (including cubemaps),
+/// which can then be used for various effects like reflections or environment maps.
 pub struct DynamicTextureLayer<L> {
+    /// The inner layer to render to the dynamic texture.
     #[layer]
     pub inner: L,
     framebuffer: Framebuffer,
-    resolution: u32,
 }
 
 impl<L> DynamicTextureLayer<L> {
+    /// Creates a new dynamic texture layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `renderer` - The renderer to use
+    /// * `inner` - The inner layer
+    /// * `resolution` - The resolution of the texture
+    ///
+    /// # Returns
+    ///
+    /// A new `DynamicTextureLayer` instance
     pub fn new(renderer: &Renderer, inner: L, resolution: u32) -> Self {
         let mut framebuffer = Framebuffer::new_with_cubemap(
             renderer,
@@ -34,7 +50,6 @@ impl<L> DynamicTextureLayer<L> {
         Self {
             inner,
             framebuffer,
-            resolution,
         }
     }
 }
@@ -49,6 +64,13 @@ where
 }
 
 impl<L> DynamicTextureLayer<L> {
+    /// Renders the inner layer to a specific face of the cubemap.
+    ///
+    /// # Arguments
+    ///
+    /// * `renderer` - The renderer to use.
+    /// * `params` - The parameters to pass to the inner layer's render function.
+    /// * `face` - The index of the cubemap face to render to (0-5).
     pub fn render_to_face<P>(&mut self, renderer: &Renderer, params: P, face: u32)
     where
         L: RenderLayer<P>,
@@ -59,6 +81,13 @@ impl<L> DynamicTextureLayer<L> {
         drop(binding);
     }
 
+    /// Renders the inner layer to a specific face of the cubemap.
+    ///
+    /// # Arguments
+    ///
+    /// * `renderer` - The renderer to use.
+    /// * `params` - The parameters to pass to the inner layer's render function.
+    /// * `face` - The index of the cubemap face to render to (0-5).
     pub fn as_cube_texture<P>(&self) -> &Texture
     where
         L: RenderLayer<P>,

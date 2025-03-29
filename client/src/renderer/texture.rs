@@ -440,6 +440,7 @@ impl Texture {
         texture
     }
 
+    /// Creates a new cubemap texture with the given size, format, and filter.
     pub fn new_cubemap(
         renderer: &Renderer,
         size: u32,

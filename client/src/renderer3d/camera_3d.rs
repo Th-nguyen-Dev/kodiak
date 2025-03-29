@@ -117,6 +117,7 @@ impl Camera3d {
         Self::with_view(view_matrix, projection)
     }
 
+    /// Creates a new [`Camera3d`] that is looking from `pos` at `target` with `up` as the up direction.
     pub fn looking_at_with_up(
         pos: Vec3,
         target: Vec3,
