@@ -13,7 +13,7 @@ extern crate core;
 mod aabb;
 mod camera_3d;
 mod crosshair;
-mod dynamic_texture;
+mod reflection;
 mod free_camera;
 #[cfg(feature = "renderer3d_model")]
 mod model;
@@ -30,7 +30,7 @@ mod wire;
 pub use aabb::*;
 pub use camera_3d::*;
 pub use crosshair::*;
-pub use dynamic_texture::*;
+pub use reflection::*;
 pub use free_camera::*;
 #[cfg(feature = "renderer3d_model")]
 pub use model::*;

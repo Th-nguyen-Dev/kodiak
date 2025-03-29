@@ -16,14 +16,14 @@ pub const CUBEMAP_DIRECTIONS: [(Vec3, Vec3); 6] = [
 /// 
 /// This wrapper allows rendering the inner layer to a texture (including cubemaps),
 /// which can then be used for various effects like reflections or environment maps.
-pub struct DynamicTextureLayer<L> {
+pub struct ReflectionLayer<L> {
     /// The inner layer to render to the dynamic texture.
     #[layer]
     pub inner: L,
     framebuffer: Framebuffer,
 }
 
-impl<L> DynamicTextureLayer<L> {
+impl<L> ReflectionLayer<L> {
     /// Creates a new dynamic texture layer.
     ///
     /// # Arguments
@@ -54,7 +54,7 @@ impl<L> DynamicTextureLayer<L> {
     }
 }
 
-impl<L, P> RenderLayer<P> for DynamicTextureLayer<L>
+impl<L, P> RenderLayer<P> for ReflectionLayer<L>
 where
     L: RenderLayer<P>,
 {
@@ -63,7 +63,7 @@ where
     }
 }
 
-impl<L> DynamicTextureLayer<L> {
+impl<L> ReflectionLayer<L> {
     /// Renders the inner layer to a specific face of the cubemap.
     ///
     /// # Arguments
