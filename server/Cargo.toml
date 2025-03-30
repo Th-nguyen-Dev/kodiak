@@ -9,6 +9,7 @@ workspace = ".."
 [features]
 glam_serde = [ "kodiak_common/glam_serde" ]
 log_release_max_level_info = [ "log/release_max_level_info" ]
+no_plasma = []
 
 [dependencies]
 actix = "0.13.5"
