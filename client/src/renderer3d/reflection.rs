@@ -20,7 +20,7 @@ pub struct ReflectionLayer<L> {
     /// The inner layer to render to the dynamic texture.
     #[layer]
     pub inner: L,
-    framebuffer: Framebuffer,
+    framebuffer: Option<Framebuffer>,
 }
 
 impl<L> ReflectionLayer<L> {
@@ -49,7 +49,14 @@ impl<L> ReflectionLayer<L> {
 
         Self {
             inner,
-            framebuffer,
+            framebuffer: Some(framebuffer),
+        }
+    }
+
+    pub fn new_disable(_renderer: &Renderer, inner: L) -> Self {
+        Self {
+            inner,
+            framebuffer: None,
         }
     }
 }
@@ -75,10 +82,12 @@ impl<L> ReflectionLayer<L> {
     where
         L: RenderLayer<P>,
     {
-        let binding = self.framebuffer.bind_to_cubemap_face(renderer, face);
-        binding.clear();
-        self.inner.render(renderer, params);
-        drop(binding);
+        if let Some(ref mut framebuffer) = self.framebuffer {
+            let binding = framebuffer.bind_to_cubemap_face(renderer, face);
+            binding.clear();
+            self.inner.render(renderer, params);
+            drop(binding);
+        }
     }
 
     /// Renders the inner layer to a specific face of the cubemap.
@@ -88,10 +97,13 @@ impl<L> ReflectionLayer<L> {
     /// * `renderer` - The renderer to use.
     /// * `params` - The parameters to pass to the inner layer's render function.
     /// * `face` - The index of the cubemap face to render to (0-5).
-    pub fn as_cube_texture<P>(&self) -> &Texture
+    pub fn as_cube_texture<P>(&self) -> Option<&Texture>
     where
         L: RenderLayer<P>,
     {
-        self.framebuffer.as_texture()
+        if let Some(ref framebuffer) = self.framebuffer {
+            return Some(framebuffer.as_texture());
+        }
+        return None;
     }
 }
