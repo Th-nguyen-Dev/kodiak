@@ -53,6 +53,16 @@ impl<L> ReflectionLayer<L> {
         }
     }
 
+    /// Creates a new dynamic texture layer that is disabled.
+    ///
+    /// # Arguments
+    ///
+    /// * `_renderer` - The renderer to use
+    /// * `inner` - The inner layer
+    ///
+    /// # Returns
+    ///
+    /// A new `DynamicTextureLayer` instance that is disabled
     pub fn new_disable(_renderer: &Renderer, inner: L) -> Self {
         Self {
             inner,
