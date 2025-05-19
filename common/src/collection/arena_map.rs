@@ -37,7 +37,7 @@ impl ArenaKey for TeamId {
 
 /// Maps increasing integers to values.
 /// TODO impl actor::storage::Map.
-#[derive(Clone, Hash, Serialize, Deserialize, Encode, Decode)]
+#[derive(Clone, Hash, PartialEq, Serialize, Deserialize, Encode, Decode)]
 pub struct ArenaMap<K, V> {
     /// Invariant: Never ends in `None`.
     slots: Vec<Option<V>>,
